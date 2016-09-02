@@ -3,6 +3,7 @@ package com.jcg.example;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -27,17 +27,13 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
-import org.springframework.http.HttpHeaders;
 
 import com.example.Item;
 import com.example.Match;
 import com.example.TextMatch;
 import com.example.UserBean1;
-import com.jcg.example.bean.Repository;
 
-;
-
-public class Test1 {
+public class Test3 {
 
 	/**
 	 * @param args
@@ -45,23 +41,25 @@ public class Test1 {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		//String link = "https://api.github.com/search/repositories?q=tetris+language:assembly+&sort=&order=desc";
-		// https://api.github.com/search/code?q=addClass+in:file+language:js+repo:jquery/jquery
-		//https://api.github.com/search/code?q=addClass+extension:js+language:js+repo:jquery/jquery
-		String link=buildcodeurl("addclass", "file", "js", ">5", "test", "js", "jquery/jquery");
-		URL crunchifyUrl = new URL("https://api.github.com/search/code?q=addClass+extension:js+language:js+repo:jquery/jquery");
+
+		URL crunchifyUrl = new URL(
+				"https://api.github.com/search/code?q=addClass+extension:js+language:js+repo:jquery/jquery");
+		//https://api.github.com/repositories/167174/contents/src/attributes/classes.js?ref=305f193aa57014dc7d8fa0739a3fefd47166cd4
 		HttpURLConnection crunchifyHttp = (HttpURLConnection) crunchifyUrl
 				.openConnection();
+		/*crunchifyHttp.setRequestProperty("Accept",
+				"application/vnd.github.VERSION.raw");*/
 		crunchifyHttp.setRequestProperty("Accept",
 				"application/vnd.github.v3.text-match+json");
 		
+
 		// application/vnd.github.v3.text-match+json
 		Map<String, List<String>> crunchifyHeader = crunchifyHttp
 				.getHeaderFields();
 		System.out.println("crunchifyHeader" + crunchifyHeader);
 		InputStream crunchifyStream = crunchifyHttp.getInputStream();
 		String crunchifyResponse = crunchifyGetStringFromStream(crunchifyStream);
-		System.out.println(crunchifyResponse);
+		// System.out.println(crunchifyResponse);
 		String jsonString = crunchifyResponse;
 		ObjectMapper mapper = new ObjectMapper();
 		try {
@@ -89,7 +87,7 @@ public class Test1 {
 			Path file22=Paths.get("C:\\dev\\the-file-name1.txt");
             List<String> list=new ArrayList<String>();
             List<String> list1=new ArrayList<String>();
-			BufferedWriter bufferWritter = new BufferedWriter(fileWritter1);
+			/*BufferedWriter bufferWritter = new BufferedWriter(fileWritter1);*/
 		
 			for (Item i : userBean.getItems()) {
 				System.out.println("===========It is start of json==========");
@@ -107,7 +105,8 @@ public class Test1 {
 					System.out.println("This is property" + t.getProperty());
 					System.out.println("This is Object type"
 							+ t.getObjectType());
-					list1.add(t.getFragment());
+					parsefile(t.getObjectUrl(), "addClass",list1);
+					//list1.add(t.getFragment());
 					System.out.println("it is fragment"+t.getFragment());
 					//fileWritter3.write(t.getFragment());
 					for (Match m : t.getMatches()) {
@@ -135,6 +134,8 @@ public class Test1 {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+
 	}
 
 	private static String crunchifyGetStringFromStream(
@@ -158,65 +159,45 @@ public class Test1 {
 			return "No Contents";
 		}
 	}
-	private static String buildcodeurl(String codevalue,String in,String language,String size,String path,String extension,String repo){
-		String gitcodeurl="https://api.github.com/search/code?q="+codevalue+"+";
-		if(in!=null)
-			gitcodeurl=gitcodeurl+"in:"+in+"+";
-		if(language!=null)
-			gitcodeurl=gitcodeurl+"language:"+language+"+";
-		if(size!=null)
-			gitcodeurl=gitcodeurl+"size:"+size+"+";
-		if(path!=null)
-			gitcodeurl=gitcodeurl+"path:"+path+"+";
-		if(extension!=null)
-			gitcodeurl=gitcodeurl+"extension:"+extension+"+";
-		if(repo!=null)
-			gitcodeurl=gitcodeurl+"repo:"+repo;
-		return gitcodeurl;
-		
-	}
 
-	private static String buildrepourl(String value, String in, String size,
-			String user, String fork, String language, String order) {
-		// TODO Auto-generated method stub
-		String gitrepourl = "https://api.github.com/search/repositories" + "?"
-				+ "q=" + value + "+";
-		if (size != null)
-			gitrepourl = gitrepourl + "size:" + size + "+";
-		if (fork != null)
-			gitrepourl = gitrepourl + "fork:" + fork + "+";
-		if (in != null)
-			gitrepourl = gitrepourl + "in:" + in + "+";
-		if (user != null)
-			gitrepourl = gitrepourl + "user:" + user + "+";
-		if (language != null)
-			gitrepourl = gitrepourl + "language:" + language + "+";
-		if (order != null)
-			gitrepourl = gitrepourl + "&sort=" + "&order=" + order;
-		// String
-		// gitrepourl="https://api.github.com/search/repositories"+"?"+"q="+value+"+"+"size:"+size+"user:"+user+"stars"+stars+"language:"+language+"&sort="+"&order="+order;
-		// System.out.println(gitrepourl);
-		return gitrepourl;
-	}
+	private static void parsefile(String crunchifyResponse, String matchvalue,List list)
+			throws IOException {
+		URL crunchifyUrl = new URL(
+				crunchifyResponse);
+		HttpURLConnection connection=(HttpURLConnection) crunchifyUrl
+				.openConnection();
+		connection.setRequestProperty("Accept",
+				"application/vnd.github.VERSION.raw");
+		URL oath=new URL("https://api.github.com/users/pranav13?client_id=8ac5733d41692c02cd76&client_secret=a01aa51e3bf1441001ff6f5e2210c181d02891f4");
+		HttpURLConnection oathconn=(HttpURLConnection)oath.openConnection();
+		Map<String, List<String>> crunchifyHeader1 = connection
+				.getHeaderFields();
+		System.out.println("crunchifyHeader" + crunchifyHeader1);
+		InputStream crunchifyStream = connection.getInputStream();
+		String crunchifyResponse11 = crunchifyGetStringFromStream(crunchifyStream);
+		FileWriter fw = new FileWriter("abc.txt");
+		fw.write(crunchifyResponse11);
+		fw.close();
+		File file = new File("abc.txt");
+		Scanner in = null;
+		try {
+			in = new Scanner(file);
+			int lineno = 0;
+			while (in.hasNext()) {
+				String line = in.nextLine();
+				lineno++;
+				// System.out.println(line);
+				System.out.println("The match value is coming"+matchvalue);
+				if (line.contains(matchvalue)){
+					System.out.println(line+lineno++);
+				list.add(line+"Line Number"+lineno++);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-	private static String builduserurl(String username, String type, String in,
-			String repos, String location, String language, String followers) {
-		String gituserurl = "https://api.github.com/search/users" + "?" + "q="
-				+ username + "+";
-		if (type != null)
-			gituserurl = gituserurl + "type:" + type + "+";
-		if (in != null)
-			gituserurl = gituserurl + "in:" + in + "+";
-		if (repos != null)
-			gituserurl = gituserurl + "repos:" + repos + "+";
-		if (location != null)
-			gituserurl = gituserurl + "location:" + location + "+";
-		if (language != null)
-			gituserurl = gituserurl + "language:" + language + "+";
-		if (followers != null)
-			gituserurl = gituserurl + "followers:" + followers;
-		return gituserurl;
 	}
-	
 
 }
