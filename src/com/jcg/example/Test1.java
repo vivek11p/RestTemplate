@@ -13,6 +13,12 @@ import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -27,6 +33,7 @@ import com.example.Item;
 import com.example.Match;
 import com.example.TextMatch;
 import com.example.UserBean1;
+import com.jcg.example.bean.Repository;
 
 ;
 
@@ -40,28 +47,14 @@ public class Test1 {
 		// TODO Auto-generated method stub
 		//String link = "https://api.github.com/search/repositories?q=tetris+language:assembly+&sort=&order=desc";
 		// https://api.github.com/search/code?q=addClass+in:file+language:js+repo:jquery/jquery
-		String link="";
-		Scanner sc = new Scanner(System.in);
-		System.out
-				.println("Search the critera that you want to serach( repositories,code,issue,user)");
-		String criteria = sc.next();
-		String value = null;
-		System.out.println(criteria);
-		if (criteria.equals("repositories")){
-			System.out.println(buildrepourl("tetris", null, null, null, ">5","assembly", "desc"));
-			link=buildrepourl("tetris", null, null, null, ">5","assembly", "desc");
-			}
-		if (criteria.equals("code")){
-			System.out.println(builduserurl("tom", "user", "login", ">42",
-					null, "js", ">1000"));
-			link=builduserurl("tom", "user", "login", ">42",
-					null, "js", ">1000");
-		}
-		URL crunchifyUrl = new URL(link);
+		//https://api.github.com/search/code?q=addClass+extension:js+language:js+repo:jquery/jquery
+		String link=buildcodeurl("addclass", "file", "js", ">5", "test", "js", "jquery/jquery");
+		URL crunchifyUrl = new URL("https://api.github.com/search/code?q=addClass+extension:js+language:js+repo:jquery/jquery");
 		HttpURLConnection crunchifyHttp = (HttpURLConnection) crunchifyUrl
 				.openConnection();
 		crunchifyHttp.setRequestProperty("Accept",
 				"application/vnd.github.v3.text-match+json");
+		
 		// application/vnd.github.v3.text-match+json
 		Map<String, List<String>> crunchifyHeader = crunchifyHttp
 				.getHeaderFields();
@@ -80,22 +73,43 @@ public class Test1 {
 					SerializationConfig.Feature.DEFAULT_VIEW_INCLUSION, false);
 			/* mapper.enable(serializationConfig.Feature.INDENT_OUTPUT); */
 			jsonString = mapper.writeValueAsString(userBean);
-			File file = new File("src/resources/file.txt");
-			if (!file.exists()) {
-				file.createNewFile();
+			File file1 = new File("file1.txt");
+			File file2 = new File("file2.txt");
+			File file3 = new File("file3.txt");
+			if (!file1.exists()||!file2.exists()||!file3.exists()) {
+				file1.createNewFile();
+				file2.createNewFile();
+				file3.createNewFile();
 			}
-			FileWriter fileWritter = new FileWriter(file.getName(), true);
-			BufferedWriter bufferWritter = new BufferedWriter(fileWritter);
-
+			FileWriter fileWritter1 = new FileWriter(file1.getName(), true);
+			/*FileWriter fileWritter2 = new FileWriter(file2.getName(), true);
+			FileWriter fileWritter3 = new FileWriter(file3.getName(), true);*/
+			/*List<String> lines = Arrays.asList("The Third line", "The second line");*/
+			Path file11 = Paths.get("C:\\dev\\the-file-name.txt");
+			Path file22=Paths.get("C:\\dev\\the-file-name1.txt");
+            List<String> list=new ArrayList<String>();
+            List<String> list1=new ArrayList<String>();
+			BufferedWriter bufferWritter = new BufferedWriter(fileWritter1);
+		
 			for (Item i : userBean.getItems()) {
 				System.out.println("===========It is start of json==========");
-				System.out.println(i.getName());
+				//Files.write(file, lines, Charset.forName("UTF-8"));
+				list.add(i.getRepository().getFullName()+"/"+i.getPath());
+				list1.add(i.getRepository().getFullName()+"/"+i.getPath());
+				
+				//System.out.println("This is list value"+list);
+				//fileWritter2.write(i.getRepository().getFullName());
+				  //i.getRepository().getFullName();
+				System.out.println("This is ths path"+i.getPath());
+				System.out.println("The full name"+i.getName());
 				for (TextMatch t : i.getTextMatches()) {
 					System.out.println("This is object url" + t.getObjectUrl());
 					System.out.println("This is property" + t.getProperty());
 					System.out.println("This is Object type"
 							+ t.getObjectType());
+					list1.add(t.getFragment());
 					System.out.println("it is fragment"+t.getFragment());
+					//fileWritter3.write(t.getFragment());
 					for (Match m : t.getMatches()) {
 						System.out.println("It is a text" + m.getText());
 						System.out.println("+++It is a indices+++"
@@ -107,6 +121,11 @@ public class Test1 {
 				// System.out.println(i.getRepository().getFullName());
 				// bufferWritter.write(i.getFullName());
 			}
+			
+			Files.write(file11, list, Charset.forName("UTF-8"));
+			Files.write(file22, list1, Charset.forName("UTF-8"));
+			
+			
 			// System.out.println(jsonString);
 
 		} catch (JsonParseException e) {
@@ -139,6 +158,23 @@ public class Test1 {
 			return "No Contents";
 		}
 	}
+	private static String buildcodeurl(String codevalue,String in,String language,String size,String path,String extension,String repo){
+		String gitcodeurl="https://api.github.com/search/code?q="+codevalue+"+";
+		if(in!=null)
+			gitcodeurl=gitcodeurl+"in:"+in+"+";
+		if(language!=null)
+			gitcodeurl=gitcodeurl+"language:"+language+"+";
+		if(size!=null)
+			gitcodeurl=gitcodeurl+"size:"+size+"+";
+		if(path!=null)
+			gitcodeurl=gitcodeurl+"path:"+path+"+";
+		if(extension!=null)
+			gitcodeurl=gitcodeurl+"extension:"+extension+"+";
+		if(repo!=null)
+			gitcodeurl=gitcodeurl+"repo:"+repo;
+		return gitcodeurl;
+		
+	}
 
 	private static String buildrepourl(String value, String in, String size,
 			String user, String fork, String language, String order) {
@@ -165,21 +201,22 @@ public class Test1 {
 
 	private static String builduserurl(String username, String type, String in,
 			String repos, String location, String language, String followers) {
-		String gitcodeurl = "https://api.github.com/search/users" + "?" + "q="
+		String gituserurl = "https://api.github.com/search/users" + "?" + "q="
 				+ username + "+";
 		if (type != null)
-			gitcodeurl = gitcodeurl + "type:" + type + "+";
+			gituserurl = gituserurl + "type:" + type + "+";
 		if (in != null)
-			gitcodeurl = gitcodeurl + "in:" + in + "+";
+			gituserurl = gituserurl + "in:" + in + "+";
 		if (repos != null)
-			gitcodeurl = gitcodeurl + "repos:" + repos + "+";
+			gituserurl = gituserurl + "repos:" + repos + "+";
 		if (location != null)
-			gitcodeurl = gitcodeurl + "location:" + location + "+";
+			gituserurl = gituserurl + "location:" + location + "+";
 		if (language != null)
-			gitcodeurl = gitcodeurl + "language:" + language + "+";
+			gituserurl = gituserurl + "language:" + language + "+";
 		if (followers != null)
-			gitcodeurl = gitcodeurl + "followers:" + followers;
-		return gitcodeurl;
+			gituserurl = gituserurl + "followers:" + followers;
+		return gituserurl;
 	}
+	
 
 }
